@@ -31,6 +31,7 @@ const Socket = struct {
 };
 
 pub fn main() !void {
+    // nc -u 127.0.0.1 4000
     var socket = try Socket.init("127.0.0.1", 4000);
     try socket.bind();
     try socket.listen();
