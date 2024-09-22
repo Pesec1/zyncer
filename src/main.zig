@@ -1,4 +1,6 @@
 const std = @import("std");
+const net = std.net;
+const os = std.os;
 const zap = @import("zap");
 const RoomWeb = @import("endpoints/roomsweb.zig");
 
