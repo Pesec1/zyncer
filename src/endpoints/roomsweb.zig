@@ -1,5 +1,6 @@
 const std = @import("std");
 const zap = @import("zap");
+const Mustache = @import("zap").Mustache;
 const Rooms = @import("rooms.zig");
 const Room = Rooms.Room;
 
@@ -15,7 +16,7 @@ pub fn init(
 ) Self {
     return .{ .alloc = a, ._rooms = Rooms.init(a), .ep = zap.Endpoint.init(.{
         .path = user_path,
-        .get = getUser,
+        .get = getRoom,
     }) };
 }
 
@@ -38,7 +39,7 @@ fn roomIdFromPath(self: *Self, path: []const u8) ?usize {
     return null;
 }
 
-fn getUser(e: *zap.Endpoint, r: zap.Request) void {
+fn getRoom(e: *zap.Endpoint, r: zap.Request) void {
     const self: *Self = @fieldParentPtr("ep", e);
 
     if (r.path) |path| {
@@ -48,6 +49,18 @@ fn getUser(e: *zap.Endpoint, r: zap.Request) void {
                 if (zap.stringifyBuf(&jsonbuf, room, .{})) |json| {
                     r.sendJson(json) catch return;
                 }
+            }
+        } else {
+            var mustache = Mustache.fromFile("src/endpoints/public/rooms.html") catch return;
+            defer mustache.deinit();
+
+            const ret = mustache.build(.{});
+            defer ret.deinit();
+
+            if (ret.str()) |s| {
+                r.sendBody(s) catch return;
+            } else {
+                r.sendBody("Failed to build mustache") catch return;
             }
         }
     }

@@ -1,8 +1,8 @@
 const std = @import("std");
 const zap = @import("zap");
-const RoomWeb = @import("roomsweb.zig");
+const RoomWeb = @import("endpoints/roomsweb.zig");
 
-fn on_request(r: zap.Request) void {
+fn on_request_basic(r: zap.Request) void {
     if (r.path) |the_path| {
         std.debug.print("PATH: {s}\n", .{the_path});
     }
@@ -11,7 +11,7 @@ fn on_request(r: zap.Request) void {
         std.debug.print("QUERY: {s}\n", .{the_query});
     }
 
-    r.sendBody("<html><body><h1>Hello from ZAP!!!</h1></body></html>") catch return;
+    r.sendBody("<html><body><h1>Start Page!!!</h1></body></html>") catch return;
 }
 
 pub fn main() !void {
@@ -22,22 +22,22 @@ pub fn main() !void {
     {
         var listener = zap.Endpoint.Listener.init(allocator, .{
             .port = 3000,
-            .on_request = on_request,
-            .public_folder = "static/",
+            .on_request = on_request_basic,
             .log = true,
             .max_clients = 100000,
         });
         defer listener.deinit();
+
         var roomWeb = RoomWeb.init(allocator, "/rooms");
         defer roomWeb.deinit();
-
         try listener.register(roomWeb.endpoint());
+
+        //testings lines
         var uid: usize = undefined;
         uid = try roomWeb.rooms().addByName("fuck you");
         uid = try roomWeb.rooms().addByName("go fuck youself");
 
         try listener.listen();
-
         std.debug.print("Listening on 0.0.0.0:3000\n", .{});
 
         zap.start(.{
